@@ -6,18 +6,18 @@
 
 # --------------------------------------------------------------------------------
 # Modified for BodyFlow Version: 1.0
-# Modifications Copyright (c) 2023 Instituto Tecnológico de Aragón
+# Modifications Copyright (c) 2023 Instituto Tecnologico de Aragon
 # (www.itainnova.es) (Spain)
 # Date: February 2023
-# Authors: Ana Caren Hernández Ruiz                      ahernandez@itainnova.es
-#          Ángel Gimeno Valero                              agimeno@itainnova.es
-#          Carlos Marañes Nueno                            cmaranes@itainnova.es
-#          Irene López Bosque                                ilopez@itainnova.es
-#          María de la Vega Rodrigálvarez Chamarro   vrodrigalvarez@itainnova.es
-#          Pilar Salvo Ibáñez                                psalvo@itainnova.es
+# Authors: Ana Caren Hernandez Ruiz                      ahernandez@itainnova.es
+#          Angel Gimeno Valero                              agimeno@itainnova.es
+#          Carlos Maranes Nueno                            cmaranes@itainnova.es
+#          Irene Lopez Bosque                                ilopez@itainnova.es
+#          Maria de la Vega Rodrigalvarez Chamarro   vrodrigalvarez@itainnova.es
+#          Pilar Salvo Ibanez                                psalvo@itainnova.es
 #          Rafael del Hoyo Alonso                          rdelhoyo@itainnova.es
-#          Rocío Aznar Gimeno                                raznar@itainnova.es
-# All rights reserved 
+#          Rocio Aznar Gimeno                                raznar@itainnova.es
+# All rights reserved
 # --------------------------------------------------------------------------------
 
 from __future__ import absolute_import
