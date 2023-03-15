@@ -4,7 +4,7 @@
 
 BodyFlow is a comprehensive library that leverages cutting-edge deep learning and other AI techniques, including new algorithms developed by the AI group at ITAINNOVA, to accurately estimate human pose in 2D and 3D from videos. With its state-of-the-art algorithms, BodyFlow can detect events such as falls and walking, and in the future, the aim is to further expand its capabilities by developing classifiers for certain neurodegenerative diseases. The use of deep learning and advanced AI methods, combined with the innovative algorithms developed by the ITAINNOVA AI group, makes BodyFlow a highly sophisticated and effective tool for analyzing human motion and detecting important events.
 
-The first release of this library contains three 2D detectors (MediaPipe2D, CPN, Lightweight) and two 3D dectectors (Videopose3D, MHFormer, MixSTE, MotionBert) for predicting Human Pose from a set of monocular RGB images in a video sequence. The code from the original works have been refactored in a way that make them easy to manipulate and combine, since the methods used in this project are those which use 2d lifting, this is, first a 2d pose estimator is used and then it is lifted with other algorithm to the final 3d pose. It is possible to add new 2d and 3d pose estimation algorithms if needed.
+The first release of this library contains three 2D detectors (MediaPipe2D, CPN, Lightweight) and four 3D dectectors (Videopose3D, MHFormer, MixSTE, MotionBert) for predicting Human Pose from a set of monocular RGB images in a video sequence. The code from the original works have been refactored in a way that make them easy to manipulate and combine, since the methods used in this project are those which use 2d lifting, this is, first a 2d pose estimator is used and then it is lifted with other algorithm to the final 3d pose. It is possible to add new 2d and 3d pose estimation algorithms if needed.
 
 The code from the original works have been refactored in a way that make them easy to manipulate and combine, since the methods used in this project are those which use 2d lifting, this is, first a 2d pose estimator is used and then it is lifted with other algorithm to the final 3d pose. It is possible to add new 2d and 3d pose estimation algorithms if needed.
 
@@ -23,7 +23,8 @@ Then, you should install the needed libraries (dependencies) which are defined i
 
 `$ pip install -r requirements.txt`
 
-Additionally, the installation of **PyTorch** library is needed. Please refer to the official website [Pytorch Webpage](https://pytorch.org/) to obtain the correct PyTorch version according to your CUDA version. You may know the CUDA version by running `nvcc --version` in the prompt.
+Additionally, the installation of **PyTorch** library is needed. This repo has been tested with cuda-enabled torch version 1.8.1, torchvision 0.9.1 and torchaudio 0.8.1 installed via pip. Please refer to the official website [Pytorch Webpage](https://pytorch.org/) to obtain the correct PyTorch version according to your CUDA version. You may know the CUDA version by running `nvcc --version` in the prompt.
+
 
 *Note: The command `nvidia-smi` also provides the CUDA version, and it can be different from the previous command, so this might be the real CUDA version.*
 
@@ -37,7 +38,8 @@ All the models weights files have been wrapped and may be downloaded by executin
 
 ### Problems & Solutions
 
-1. If there is an error raised by mediapipe, the following command can solve it `$ pip install --upgrade protobuf==3.20.0`
+1. If there is an error raised by mediapipe, the following command can solve it `$ pip install --upgrade protobuf==3.20.0`.
+2. If an error is raised by load_weights, please downgrade PyTorch to the version described in installation.
 
 ## Running the code
 

@@ -23,7 +23,8 @@ class VideoFromCam(VideoCapture):
     """
     def __init__(self, video_source: str):
         # Open video file
-        self._cap = cv2.VideoCapture(video_source)
+        source = int(video_source)
+        self._cap = cv2.VideoCapture(source)
         self._finished = False
         self._timestamp = -1
         

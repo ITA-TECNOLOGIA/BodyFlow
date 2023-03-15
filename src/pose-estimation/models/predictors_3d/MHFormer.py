@@ -29,7 +29,7 @@ from models.predictors_3d.mhformer.mhformer_model import Model
 from common_pose.BodyLandmarks import BodyLandmarks3d, Landmark
 
 class MHFormer(HPE3D):
-    def __init__(self, window_length=(40*2 + 1)):
+    def __init__(self, window_length=(243)):
         # Load MHFormer model
         args_3d = {
             'layers' : 3,
@@ -121,6 +121,8 @@ class MHFormer(HPE3D):
         return self.add_frame(frame, keypoints_2d, timestamp, bodyLandmarks2d)
     
     def destroy_buffer(self):
+        while not self.buffer_full():
+            self.add_frame(self._buffer_frames[0], self._buffer_keypoints_2d[0], self._buffer_timestamps[0], self._buffer_bodyLandmarks2d[0])
         half_window = (self._args_3d['frames'] // 2) + 2
         timestamp_no = self._buffer_timestamps[:half_window].count(self._buffer_timestamps[0])
         expected_timestamps = len(self._buffer_timestamps[:half_window])
