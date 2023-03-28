@@ -19,11 +19,12 @@
 import os
 import logging
 import pandas as pd
+import pandas.io.common
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.animation as animation
 from matplotlib import rcParams
-rcParams['font.family'] = 'serif'
+#rcParams['font.family'] = 'serif'
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
@@ -38,15 +39,19 @@ class Visualization():
         self.video_fnm = video_fnm
         self.log_filename = log_filename
         filename = 'logs/' + log_filename
-        self.df = pd.read_csv(filename)
-        self.number_frames = len(self.df)
-        self.alternative = alternative
-        video_frames, fps = self.get_video_frames()
-        self.video_frames = video_frames
-        self.fps = fps
-        self.x1_3d = self.get3djoints()
-        self.x1_2d = self.get2djoints()
-        self.plotVideo()
+        try:
+            self.df = pd.read_csv(filename)
+            self.number_frames = len(self.df)
+            self.alternative = alternative
+            video_frames, fps = self.get_video_frames()
+            self.video_frames = video_frames
+            self.fps = fps
+            self.x1_3d = self.get3djoints()
+            self.x1_2d = self.get2djoints()
+            self.plotVideo()           
+        except pandas.errors.EmptyDataError:
+            logging.info("CSV empty: The video was processed, but no person was recognized in the video.")
+
         
 
     def get_video_frames(self):
@@ -54,17 +59,18 @@ class Visualization():
         Fetchs frames of the video input with opencv and the frames per second
         """       
         import cv2
-        vcap = cv2.VideoCapture(self.video_fnm)
-        fps = vcap.get(cv2.CAP_PROP_FPS)
+        import glob
+        images_path = glob.glob(os.path.join(self.video_fnm, "*.png"))
+        images_path.sort(key=os.path.getctime)
+
         frames = []
-        ret = True
-        while ret:
-            ret, img = vcap.read() 
-            if ret:
-                img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-                frames.append(img)
+        for img_path in images_path:
+            img = cv2.imread(img_path)
+            img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+            frames.append(img)
+        fps = 18
         video_frames = np.stack(frames, axis=0)
-        video_frames = video_frames[self.df.iloc[:,0][0]-1: self.df.iloc[:,0][len(self.df)-1]]
+        #video_frames = video_frames[self.df.iloc[:,0][0]-1: self.df.iloc[:,0][len(self.df)-1]]
         logging.info('Video frames processed')
         return video_frames, fps
     
@@ -213,3 +219,4 @@ class Visualization():
         os.makedirs(os.path.join("data", "output"), exist_ok=True)
         anim.save(f'data/output/viz_{self.log_filename.split(".")[0][4:]}.mp4', writer = writervideo)
         logging.info('Video saved!')
+        

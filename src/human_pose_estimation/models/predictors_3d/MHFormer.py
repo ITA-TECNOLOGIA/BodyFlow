@@ -15,60 +15,50 @@
 # --------------------------------------------------------------------------------
 
 """
-MotionBERT: Unified Pretraining for Human Motion Analysis
+MHFormer: Multi-Hypothesis Transformer for 3D Human Pose Estimation [CVPR 2022]
 
-https://github.com/Walter0807/MotionBERT
+https://github.com/Vegetebird/MHFormer
 """
 from models.HPE3D import HPE3D
 import numpy as np
-import copy
-import random
-import torch
-import torch.nn as nn
-import logging
-from functools import partial
 from common_pose.utils import normalize_screen_coordinates
+import torch
+import copy
+import os
+from models.predictors_3d.mhformer.mhformer_model import Model
 from common_pose.BodyLandmarks import BodyLandmarks3d, Landmark
-from models.predictors_3d.motionbert.DSTformer import DSTformer
 
-random.seed(0)
-np.random.seed(0)
-torch.manual_seed(0)
-import logging
-
-class MotionBert(HPE3D):
-    """
-    This class imports and executes the model called MotionBert. The model was downloaded from the 
-    source. It works with a receptive field of 243 frames.
-    """
-    def __init__(self):
-        # Load MotionBert model with MotionBert arguments for network inference
-        self.model = DSTformer(dim_in=3, dim_out=3, dim_feat=256, dim_rep=512, 
-                               depth=5, num_heads=8, mlp_ratio=4, 
-                               norm_layer=partial(nn.LayerNorm, eps=1e-6), 
-                               maxlen=243, num_joints=17)
-        model_params = 0
-        for parameter in self.model.parameters():
-            model_params = model_params + parameter.numel()
-        logging.info(f'Trainable parameter count: {model_params}')
+class MHFormer(HPE3D):
+    def __init__(self, window_length=(243)):
+        # Load MHFormer model
+        args_3d = {
+            'layers' : 3,
+            'channel' : 512,
+            'd_hid' : 1024,
+            'frames' : window_length,
+            'n_joints' : 17,
+            'out_joints' : 17
+        }
+        args_3d['pad'] = (args_3d['frames'] - 1) // 2
+        model_path = os.path.join('models', f"mhformer_model_{window_length}.pth")
+       
+        self.model = Model(args_3d).cuda()
+        model_dict = self.model.state_dict()
+        pre_dict = torch.load(model_path)
+        for name, _ in model_dict.items():
+            model_dict[name] = pre_dict[name]
+        self.model.load_state_dict(model_dict)
         if torch.cuda.is_available():
-            self.model= nn.DataParallel(self.model)
-            self.model =  self.model.cuda()
+            self.model = self.model.cuda()
         
-        chk_filename='models/best_epoch.bin'
-        logging.info(f'Loading checkpoint ´{chk_filename}')
-        checkpoint = torch.load(chk_filename, map_location=lambda storage, loc: storage)
-        self.model.load_state_dict(checkpoint['model_pos'], strict=True)
-        
-        logging.info('Testing')
-        self.model.eval()         
-        self._args_3d = {'frames': 243}
+        self.model.eval()
+        self._args_3d = args_3d
 
         self._buffer_frames = [] # buffer of positions, since it predicts from video
         self._buffer_keypoints_2d = []
-        self._buffer_timestamps = []       
+        self._buffer_timestamps = []
         self._buffer_bodyLandmarks2d = []
-        
+
     def buffer_full(self):
         return self._args_3d['frames'] == len(self._buffer_keypoints_2d)
     
@@ -122,16 +112,17 @@ class MotionBert(HPE3D):
         self._buffer_bodyLandmarks2d.insert(0, bodyLandmarks2d)
         return self.buffer_full()
 
-
     def init_buffers(self, frame, keypoints_2d, timestamp, bodyLandmarks2d):
         if self.buffer_empty():  # Buffer not initialized
             # Replicate the first frame until complete half of the window (padding)
             for _ in range(self._args_3d['frames'] // 2): # TODO is -1?
                 self.add_frame(frame, keypoints_2d, timestamp, bodyLandmarks2d)
-                
+
         return self.add_frame(frame, keypoints_2d, timestamp, bodyLandmarks2d)
     
     def destroy_buffer(self):
+        if self.buffer_empty():
+            return None
         while not self.buffer_full():
             self.add_frame(self._buffer_frames[0], self._buffer_keypoints_2d[0], self._buffer_timestamps[0], self._buffer_bodyLandmarks2d[0])
         half_window = (self._args_3d['frames'] // 2) + 2
@@ -167,9 +158,6 @@ class MotionBert(HPE3D):
         
         input_2D = input_2D[np.newaxis, :, :, :, :]
 
-        test_confidence = np.ones(input_2D.astype('float32').shape)[:,:,:,:,0:1] #MOTIONBERT CUSTOM ( we need confidence from 2d inference )
-        input_2D = np.concatenate((input_2D.astype('float32'), test_confidence), axis=4)  # [BS, N, 17, 3]        
-        
         input_2D = torch.from_numpy(input_2D.astype('float32')).cuda()
 
         if torch.cuda.is_available():
@@ -183,11 +171,11 @@ class MotionBert(HPE3D):
         output_3D_flip[:, :, joints_left + joints_right, :] = output_3D_flip[:, :, joints_right + joints_left, :] 
 
         output_3D = (output_3D_non_flip + output_3D_flip) / 2
-      
-        output_3D = output_3D[0:,(self._args_3d['frames'] - 1) // 2].unsqueeze(1) 
+
+        output_3D = output_3D[0:, self._args_3d['pad']].unsqueeze(1) 
         output_3D[:, :, 0, :] = 0
         post_out = output_3D[0, 0].cpu().detach().numpy()
-        return self.pose_to_landmarks(post_out,  bodyLandmarks2d, timestamp)
+        return self.pose_to_landmarks(post_out, bodyLandmarks2d, timestamp)
     
 
     def pose_to_landmarks(self, pose, bodyLandmarks2d, timestamp):

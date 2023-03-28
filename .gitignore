@@ -1,0 +1,13 @@
+models/*
+logs
+imgs
+*.pyc
+src/human_pose_estimation/videos/*
+data/itainnova/*
+logger_*
+.vscode/*
+__pycache__
+src/human_activity_recognition/mlruns/*
+src/human_activity_recognition/lightning_logs/*
+src/human_activity_recognition/playground.ipynb
+output_activity_predictions.csv
