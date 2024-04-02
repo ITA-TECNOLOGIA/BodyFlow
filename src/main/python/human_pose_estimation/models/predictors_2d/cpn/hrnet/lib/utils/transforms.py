@@ -1,0 +1,156 @@
+# ------------------------------------------------------------------------------
+# Copyright (c) Microsoft
+# Licensed under the MIT License.
+# Written by Bin Xiao (Bin.Xiao@microsoft.com)
+# ------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------
+# Modified for BodyFlow Version: 2.0
+# Modifications Copyright (c) 2024 Instituto Tecnologico de Aragon
+# (www.ita.es) (Spain)
+# Date: March 2024
+# Authors: Ana Caren Hernandez Ruiz                      ahernandez@ita.es
+#          Angel Gimeno Valero                              agimeno@ita.es
+#          Carlos Maranes Nueno                            cmaranes@ita.es
+#          Irene Lopez Bosque                                ilopez@ita.es
+#          Jose Ignacio Calvo Callejo                       jicalvo@ita.es
+#          Maria de la Vega Rodrigalvarez Chamarro   vrodrigalvarez@ita.es
+#          Pilar Salvo Ibanez                                psalvo@ita.es
+#          Rafael del Hoyo Alonso                          rdelhoyo@ita.es
+#          Rocio Aznar Gimeno                                raznar@ita.es
+#          Pablo Perez Lazaro                               plazaro@ita.es
+#          Marcos Marina Castello                           mmarina@ita.es
+# All rights reserved
+# --------------------------------------------------------------------------------
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import numpy as np
+import cv2
+
+
+def flip_back(output_flipped, matched_parts):
+    '''
+    ouput_flipped: numpy.ndarray(batch_size, num_joints, height, width)
+    '''
+    assert output_flipped.ndim == 4,\
+        'output_flipped should be [batch_size, num_joints, height, width]'
+
+    output_flipped = output_flipped[:, :, :, ::-1]
+
+    # 因为你输入的是翻转后的图像，所以输出的热图他们对应的左右关节也是相反的（训练的时候，输入的是翻转后的图像，target对应的左右关节也是对调过来的）。
+    for pair in matched_parts:
+        tmp = output_flipped[:, pair[0], :, :].copy()
+        output_flipped[:, pair[0], :, :] = output_flipped[:, pair[1], :, :]
+        output_flipped[:, pair[1], :, :] = tmp
+
+    return output_flipped
+
+
+def fliplr_joints(joints, joints_vis, width, matched_parts):
+    """
+    flip coords
+    """
+    # Flip horizontal
+    joints[:, 0] = width - joints[:, 0] - 1
+
+    # Change left-right parts
+    for pair in matched_parts:
+        joints[pair[0], :], joints[pair[1], :] = \
+            joints[pair[1], :], joints[pair[0], :].copy()
+        joints_vis[pair[0], :], joints_vis[pair[1], :] = \
+            joints_vis[pair[1], :], joints_vis[pair[0], :].copy()
+
+    return joints*joints_vis, joints_vis
+
+
+def transform_preds(coords, center, scale, output_size):
+    """
+    This methdod takes in a set of keypoint coordinates, a center point and scale factor, 
+    and an output size, and applies an affine transformation to the keypoints to 
+    transform them back to their original position.
+
+    - coords: numpy array containing the keypoint coordinates to be transformed, with the shape (num_keypoints, 2).
+    - center: numpy array containing the center point of the image, with the shape (2,).
+    - scale: single value representing the scale factor applied to the image.
+    - output_size: numpy array containing the dimensions of the output image, with the shape (2,).
+    """
+    target_coords = np.zeros(coords.shape)
+    trans = get_affine_transform(center, scale, 0, output_size, inv=1)
+    for p in range(coords.shape[0]):
+        target_coords[p, 0:2] = affine_transform(coords[p, 0:2], trans)
+    return target_coords
+
+
+def get_affine_transform(center, scale, rot, output_size,shift=np.array([0, 0], dtype=np.float32), inv=0):
+    """
+    - center: the center point of the image
+    - scale: the scaling factor to apply to the image
+    - rot: the rotation angle (in degrees) to apply to the image
+    - output_size: the size of the output image
+    - shift (optional): an array of x,y shift to apply to the image
+    - inv (optional): a flag that indicates whether to invert the transform or not
+    """
+    if not isinstance(scale, np.ndarray) and not isinstance(scale, list):
+        #print(scale)
+        scale = np.array([scale, scale])
+
+    scale_tmp = scale * 200.0
+    src_w = scale_tmp[0]
+    dst_w = output_size[0]
+    dst_h = output_size[1]
+
+    rot_rad = np.pi * rot / 180
+    src_dir = get_dir([0, src_w * -0.5], rot_rad)
+    dst_dir = np.array([0, dst_w * -0.5], np.float32)
+
+    src = np.zeros((3, 2), dtype=np.float32)
+    dst = np.zeros((3, 2), dtype=np.float32)
+    src[0, :] = center + scale_tmp * shift
+    src[1, :] = center + src_dir + scale_tmp * shift
+    dst[0, :] = [dst_w * 0.5, dst_h * 0.5]
+    dst[1, :] = np.array([dst_w * 0.5, dst_h * 0.5]) + dst_dir
+
+    src[2:, :] = get_3rd_point(src[0, :], src[1, :])
+    dst[2:, :] = get_3rd_point(dst[0, :], dst[1, :])
+
+    if inv:
+        trans = cv2.getAffineTransform(np.float32(dst), np.float32(src))
+    else:
+        trans = cv2.getAffineTransform(np.float32(src), np.float32(dst))
+
+    return trans
+
+
+def affine_transform(pt, t):
+    new_pt = np.array([pt[0], pt[1], 1.]).T
+    new_pt = np.dot(t, new_pt)
+    return new_pt[:2]
+
+
+def get_3rd_point(a, b):
+    direct = a - b
+    return b + np.array([-direct[1], direct[0]], dtype=np.float32)
+
+
+def get_dir(src_point, rot_rad):
+    sn, cs = np.sin(rot_rad), np.cos(rot_rad)
+
+    src_result = [0, 0]
+    src_result[0] = src_point[0] * cs - src_point[1] * sn
+    src_result[1] = src_point[0] * sn + src_point[1] * cs
+
+    return src_result
+
+
+def crop(img, center, scale, output_size, rot=0):
+    trans = get_affine_transform(center, scale, rot, output_size)
+
+    dst_img = cv2.warpAffine(
+        img, trans, (int(output_size[0]), int(output_size[1])),
+        flags=cv2.INTER_LINEAR
+    )
+
+    return dst_img
