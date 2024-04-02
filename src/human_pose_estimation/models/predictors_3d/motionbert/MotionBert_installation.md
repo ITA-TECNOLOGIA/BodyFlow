@@ -14,7 +14,7 @@ BodyFlow
 │
 │
 └───src
-    │───pose-estimation
+    │───human_pose_estimation
             └───models
                     └───predictors_3d
                             └───motionbert

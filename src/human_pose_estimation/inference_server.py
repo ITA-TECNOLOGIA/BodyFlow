@@ -22,11 +22,9 @@ import signal
 import logging
 from datetime import datetime
 
-import os
-import sys
 
-sys.path.append(os.path.join('src', 'pose-estimation', 'models', 'predictors_3d', 'mixste'))
-sys.path.append(os.path.join('src', 'pose-estimation', 'models', 'predictors_3d', 'motionbert'))
+sys.path.append(os.path.join('src', 'human_pose_estimation', 'models', 'predictors_3d', 'mixste'))
+sys.path.append(os.path.join('src', 'human_pose_estimation', 'models', 'predictors_3d', 'motionbert'))
 
 # Pose Sender
 from common_pose.PoseLogger import PoseLogger
@@ -51,9 +49,6 @@ from models.predictors_3d.MHFormer import MHFormer
 
 # Pose Predictor from RGB to 3D
 from models.HPE import HPE
-
-# Visualization
-from common_pose.visualization import Visualization
  
 
 def instance_video_capture(args) -> VideoCapture:
@@ -234,14 +229,27 @@ if __name__ == "__main__":
 
     human_pose_estimator = HPE(predictor_2d, predictor_3d)
     
-    video_filename=args.video_path.split('/')[-1].split('.')[0]
-    log_filename=f'Log_{args.predictor_2d}_{args.predictor_3d}_{video_filename}.csv'
+    if args.input == 'video':
+        video_filename=args.video_path.split('/')[-1].split('.')[0]
+        log_filename=f'Log_{args.predictor_2d}_{args.predictor_3d}_{video_filename}.csv'
+    elif args.input == 'pictures':
+        video_filename=args.pictures_path.split('/')[-1].split('.')[0]
+        log_filename=f'Log_{args.predictor_2d}_{args.predictor_3d}_{video_filename}.csv'
+    
     pose_logger = PoseLogger(args.port, filename=log_filename)
 
     logging.info("Predicting %s with %s 2d pose detector and %s 3d pose detector", args.input, args.predictor_2d, args.predictor_3d)
 
     inference(videoCapture, human_pose_estimator, pose_logger)
-    if args.viz==True:
-        Visualization(args.video_path, log_filename)
+    
+    if args.viz == True:
+        if args.input == 'video':
+            from common_pose.visualization_from_videos import Visualization
+            Visualization(args.video_path, log_filename)
+        if args.input == 'pictures':
+            from common_pose.visualization_from_images import Visualization
+            Visualization(args.pictures_path, log_filename)
+        elif args.input == 'cam':
+            logging.info("Visualization skipped!: Unavailable for this input format.")
 
     

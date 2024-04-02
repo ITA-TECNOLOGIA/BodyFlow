@@ -55,7 +55,7 @@ class CPN(HPE2D):
         self._human_model = yolo_model(inp_dim=self._det_dim)
 
         # --------- Load Pose Model (HRNet) ---------
-        cfg_file = os.path.join('src', 'pose-estimation', 'models', 'predictors_2d', 'cpn', 'hrnet', 'experiments','w48_384x288_adam_lr1e-3.yaml')
+        cfg_file = os.path.join('src', 'human_pose_estimation', 'models', 'predictors_2d', 'cpn', 'hrnet', 'experiments','w48_384x288_adam_lr1e-3.yaml')
         model_dir = os.path.join('models', 'pose_hrnet_w48_384x288.pth')
         self._pose_model = pose_model_load(cfg_file, model_dir)
 
