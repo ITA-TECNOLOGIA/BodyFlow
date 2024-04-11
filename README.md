@@ -2,6 +2,8 @@
 
 <img src="figures/AI4HealthyAging_logo.png" alt="AI4HealthyAging Logo" width="200"/> <img src="figures/ITA_Logo.png" alt="ITA Logo" width="300"/>
 
+<img src="figures/gobierno_logo.png" alt="Gobierno de España Logo" width="200"/> <img src="figures/plan_logo.png" alt="Plan de Recuperación, Transformación y Resiliencia Logo" width="150"/> <img src="figures/eu_logo.png" alt="NextGenerationEU Logo" width="200"/> <img src="figures/enia_logo.png" alt="ENIA Logo" width="200"/>
+
 
 BodyFlow is a comprehensive library that leverages cutting-edge deep learning and other AI techniques, including new algorithms developed by the AI group at ITA, to accurately estimate human pose in 2D and 3D from videos. With its state-of-the-art algorithms, BodyFlow can detect events such as falls and walking, and in the future, the aim is to further expand its capabilities by developing classifiers for certain neurodegenerative diseases. The use of deep learning and advanced AI methods, combined with the innovative algorithms developed by the ITA AI group, makes BodyFlow a highly sophisticated and effective tool for analyzing human motion and detecting important events.
 
