@@ -104,15 +104,14 @@ if __name__ == '__main__':
     parser.add_argument('--har_model', type = str, default = 'lstm', help = 'HAR model: [lstm, cnn, transformer]')
     parser.add_argument('--input_data', type = str, default = 'all', help = '[all, 2d, 3d]')
     parser.add_argument('--batch', type = int, default = 64, help = 'Batch size')
-    parser.add_argument('--path_dataset', type = str, default = 'logs/Log_dummy2d_expose_VID20240327100723_1s.csv') 
+    parser.add_argument('--path_dataset', type = str, default = 'logs/Log_cpn_mhformer_person_walking.csv') 
     parser.add_argument('--window_step', type = int, default = 1, help = 'Window step: [1]')
-    parser.add_argument('--window_size', type = int, default = 41, help = 'window_size: [21, 41, 81]')
+    parser.add_argument('--window_size', type = int, default = 21, help = 'window_size: [21, 41, 81]')
     parser.add_argument('--workers', type = int, default = 64, help = 'Number of workers to feed the data')
     parser.add_argument('--gpu', type = int, default = 0, help = 'Cuda device: [0, 1, 2, 3]')
     
     parser.add_argument('--render_video', type = str, default= None, help = 'Video path to overlap the activity in each frame')
-    #parser.add_argument('--render_video', type = str, default= ".viz_VID20240327100723_1s.mp4", help = 'Video path to overlap the activity in each frame')
-    parser.add_argument('--viz', type = int, default= 1, help = 'Id of the user predictions to plot in the video')
+    parser.add_argument('--viz', type = int, default = 0, help = 'Id of the user predictions to plot in the video')
 
 
     args = parser.parse_args()

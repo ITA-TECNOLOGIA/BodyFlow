@@ -128,7 +128,7 @@ def instance_predictor_3d(predictor_3d, window_length, path, developer_parameter
                                          developer_parameters=developer_parameters)
     elif predictor_3d == "videopose":     
         from human_pose_estimation.models.predictors_3d.VideoPose3D import VideoPose3D   
-        predictor_3d_instance = VideoPose3D(window_length=window_length,
+        predictor_3d_instance = VideoPose3D(window_length=243,
                                             developer_parameters=developer_parameters)
     elif predictor_3d == "mediapipe3d":
         from human_pose_estimation.models.predictors_3d.Mediapipe3D import Mediapipe3D

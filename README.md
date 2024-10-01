@@ -7,6 +7,11 @@
 
 BodyFlow is a comprehensive library that leverages cutting-edge deep learning and other AI techniques, including new algorithms developed by the AI group at ITA, to accurately estimate human pose in 2D and 3D from videos. With its state-of-the-art algorithms, BodyFlow can detect events such as falls and walking, and in the future, the aim is to further expand its capabilities by developing classifiers for certain neurodegenerative diseases. The use of deep learning and advanced AI methods, combined with the innovative algorithms developed by the ITA AI group, makes BodyFlow a highly sophisticated and effective tool for analyzing human motion and detecting important events.
 
+## Colab Demo
+
+For an interactive demonstration of BodyFlow, you can use the [Colab BodyFlow Demo Notebook](Bodyflow_Demo.ipynb), where we provide step-by-step guidance on how to run pose estimation and activity recognition models. The notebook is designed to help you better understand the functionality and potential of BodyFlow.
+
+
 ## Module 1: Human Pose Estimation (Multi-person and tracking)
 The first module of this library contains three 2d detectors (MediaPipe2D, CPN, Lightweight) and six 3d detectors (Videopose3D, MHFormer, MixSTE, MotionBert, MediaPipe3D, ExPose) for predicting Human Pose from a set of monocular RGB images in a video sequence. The code from the original works has been refactored in a way that makes them easy to manipulate and combine since the methods used in this project are those that use 2d lifting, this is, first, a 2d pose estimator is used and then it is lifted with another algorithm to the final 3d pose. It is possible to add new 2d and 3d pose estimation algorithms if needed.
 
@@ -122,6 +127,8 @@ They are indicated in the following form:
 For example, to run CPN and MHFormer:
 
 `$ python src/main/python/human_pose_estimation/inference_server.py --predictor_2d cpn --predictor_3d mhformer`
+
+**Note: To have an understanding of how to combine the different predictors please [check this documentation](src/main/python/human_pose_estimation/models/README_models.md).**
 
 You can solo indicate the max_age of the tracker with the parameter `--max_age`.
 

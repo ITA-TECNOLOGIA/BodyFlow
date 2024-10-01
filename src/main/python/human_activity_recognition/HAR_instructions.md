@@ -1,17 +1,18 @@
-# Human Activity Recognition module instructions
+# Human Activity Recognition (HAR) Module Instructions
 
-The HAR module may be used independently with pretrained or custom models. To use this module the UPFALL dataset must be available and synched please refer to the *[UPFALL_synchronization instructions](../synchronization/Synchronization_UPFALL_instruccions.md)*. However, we have already released the preprocessed data ready to be trained. The data can be found in the following [link](https://argon-docker.itainnova.es/repository/war/bodyflow/HAR/dataset/processed_harup.csv). You have to download the file `processed_harup.csv` and copy it in `/data/har/processed_harup.csv`. You may have to create the corresponding route.
+The HAR module is designed for human activity recognition using pretrained or custom models. It relies on pose data from the human_pose_estimation module, not sensor data. To use this module, you must first have access to the UPFALL dataset. Refer to the [UPFALL_synchronization instructions](../synchronization/Synchronization_UPFALL_instruccions.md) for details on syncing the dataset. Preprocessed data is also available [here](https://argon-docker.itainnova.es/repository/war/bodyflow/HAR/dataset/processed_harup.csv).
 
+Download `processed_harup.csv` and place it at `/data/har/processed_harup.csv`. You may need to create this directory manually.
 
-To download the models already trained with vision features to predict the activity of the pose computed with the human_pose_estimation module, we already released the models in the following [link](https://argon-docker.itainnova.es/repository/war/bodyflow/HAR/models/HAR_models.zip). The models should be copied as follows:
+### Pretrained Models
+
+We provide pretrained models that predict activities from pose estimation data (HPE). These models can be downloaded [here](https://argon-docker.itainnova.es/repository/war/bodyflow/HAR/models/HAR_models.zip). Once downloaded, copy the models to the following path:
 
 ```
 src/main/python/human_activity_recognition
-                        |
-                        │
                         └───weights
                               | cnn_2d.pth
-                              │ cnn_3d.pth
+                              | cnn_3d.pth
                               | cnn_all.pth
                               | lstm_2d.pth
                               | lstm_3d.pth
@@ -21,76 +22,100 @@ src/main/python/human_activity_recognition
                               | transformer_all.pth
 ```
 
-## Running the code
+## Running the Code
 
 ### Training
 
-To train or test (TESTING FEATURE) the model, navigate to the project root directory and execute main.py with the desired arguments:
+To train or test a model, navigate to the project’s root directory and execute `main.py` with the desired arguments:
 
-`$ python src/human_activity_recognition/main.py [ARGUMENTS]`
+```bash
+$ python src/human_activity_recognition/main.py [ARGUMENTS]
+```
 
-Below are the arguments you can specify when running main.py. We DO not recommend changing the parameters dataset, training, test, and tuning, since they are testing features still under development:
+Recommended arguments are as follows:
 
-- --har_model: Specifies the type of model to use for HAR. Options include lstm, cnn, and transformer. The default is transformer.
-
-- --input_data: Determines the type of input data to be used. Valid options are all, 2d, 3d, Imus, and ankle. Default is 3d.
-
-- --batch: Sets the batch size for training or testing. The default is 64.
-
-- --epochs: The number of training epochs. The default is 100.
-
-- --path_dataset: The file path to the dataset. The default is `data/har/processed_harup.csv`.
-
-- --label: Defines the label to be used. Options are activity and tag. Default is activity.
-
-- --window_step: The step size of the window. The default is 1.
-
-- --window_size: The size of the window. Valid options are 21, 41, 81. The default is 41.
-
-- --workers: The number of worker threads to use for data loading. The default is 64.
-
-- --gpu: Specifies the CUDA device to use. Options are 0, 1, 2, 3. The default is 0.
-
-- --dataset: Defines the dataset to use. Options include harup, harup_vision, and itainnova. The default is harup_vision.
-
-- --train: Enables training mode. The default is True.
-
-- --test: Enables testing mode. The default is False.
-
-- --tune: Activates the tuning of hyperparameters mode. The default is False.
+- `--har_model`: Choose from lstm, cnn, transformer (default: transformer).
+- `--input_data`: Select the input data format (options: all, 2d, 3d, IMUs, ankle; default: 3d).
+- `--batch`: Specify the batch size (default: 64).
+- `--epochs`: Number of epochs to train (default: 100).
+- `--path_dataset`: Path to the dataset (default: `data/har/processed_harup.csv`).
+- `--label`: Choose between 'activity' or 'tag' labels (default: activity).
+- `--window_step`: The step size of the window (default: 1).
+- `--workers`: Number of worker threads for data loading (default: 64).
+- `--gpu`: Choose the GPU device (0, 1, 2, 3; default: 0).
+- `--dataset`: Specify the dataset to use (options: harup, harup_vision, itainnova; default: harup_vision).
+- `--train`: Enable training mode (default: True).
+- `--test`: Enable testing mode (default: False).
+- `--tune`: Activate hyperparameter tuning (default: False).
 
 ### Inference
 
-This guide details the process for running the Human Activity Recognition (HAR) inference pipeline, which leverages pose estimation data to predict activities in videos. The inference process utilizes output from the human_pose_estimation module and supports various models and input types.
+The inference pipeline uses pose data to predict activities in videos. The parameters and usage from `human_pose_estimation_inference.py` are as follows:
 
-Before running the HAR inference, ensure you have completed the human pose estimation process, which generates a .log file containing the poses of detected individuals. This file is typically located in the logs root folder.
+1. **Locate the Pose Estimation Log File**  
+   Identify the `.log` file generated by the human_pose_estimation module.
 
-#### Step 1: Locate the Pose Estimation Log File
-Identify the .log file generated by the human_pose_estimation module. This file contains essential data for activity recognition.
+2. **Run the Inference Script (Optional)**  
+   With the log file ready, run the following command:
 
-#### Step 2: Execute the Inference Script (Optional)
-With the log file path known, run the following command in your terminal:
+   ```bash
+   $ python src/main/python/human_activity_recognition/human_pose_estimation_inference.py --path_dataset LOG_PATH
+   ```
 
-`$ python src/main/python/human_activity_recognition/human_pose_estimation_inference.py --path_dataset LOG_PATH`
+#### Inference Parameters:
 
-Replace LOG_PATH with the actual path to your .log file.
+- `--har_model`: Choose the model for HAR (options: lstm, cnn, transformer; default: lstm).
+- `--input_data`: Type of input data used by the model (options: all, 2d, 3d; default: all).
+- `--batch`: Batch size for loading data (default: 64).
+- `--path_dataset`: Path to the log file generated by the human_pose_estimation module (default: `logs/Log_cpn_mhformer_person_walking.csv`).
+- `--window_step`: Step size of the window (default: 1).
+- `--window_size`: The size of the window (options: 21, 41, 81; default: 41).
+- `--workers`: Number of worker threads for data loading (default: 64).
+- `--gpu`: CUDA device to use (options: 0, 1, 2, 3; default: 0).
+- `--render_video`: Path to the input video file if you wish to overlay predicted activities on the video (default: None).
+- `--viz`: The ID of the bounding box (person) whose activities will be displayed in the video (default: 0).
 
-Optional Arguments: You can customize the inference process with the following optional arguments:
+3. **Output**  
+   After running the script, the predicted activities will be saved in `dataset_har.csv`.
 
-- --har_model: Choose the HAR model. Options: lstm, cnn, transformer (default: transformer).
-- --input_data: Set the type of input data. Options: all, 2d, 3d, Imus, ankle (default: 3d).
+4. **Overlay Predictions on Video** (Optional)  
+   If you want to overlay predictions on the video:
 
-#### Step 3: Execute the Inference Script andReview the Output
-After running the script, the output will be saved as dataset_har.csv, enriching the input log with a new column that includes the predicted activity for each pose.
+   ```bash
+   $ python src/main/python/human_activity_recognition/human_pose_estimation_inference.py --path_dataset LOG_PATH --render_video VIDEO_PATH --viz BOUNDING_BOX_ID
+   ```
 
+   The output video will have activities displayed and will be saved as `.har_video.mp4`.
 
-To overlay the predicted activities on the source video:
-- --render_video: Path to the input video file. This should be the output from the human_pose_estimation module.
-- --viz: ID of the bounding box (person) for which to display the activity. The default is 1.
+   ![HAR Prediction](../../../../figures/har_prediction.png)
 
-Command example: 
-`$ python src/main/python/human_activity_recognition/human_pose_estimation_inference.py --path_dataset LOG_PATH --render_video VIDEO_PATH --viz BOUNDING_BOX_ID`
+---
 
-Replace LOG_PATH, VIDEO_PATH, and BOUNDING_BOX_ID with your specific file paths and desired bounding box ID, respectively. The processed video, with activities overlaid, will be saved as `.har_video.mp4`. A frame of the output would look as follows. Note the top-left corner where it is the HAR prediction.
+## Model Selection Guide
 
-![HAR Prediction](../../../../figures/har_prediction.png)
+The Human Activity Recognition (HAR) module processes visual data (2D and 3D pose data, or both) to predict activities. When selecting a model, it’s crucial to balance performance and hardware requirements. Below are some considerations for selecting the appropriate model:
+
+- **Hardware Considerations**:  
+  If you're running inference on limited or low-power hardware (e.g., edge devices or mobile platforms), choosing a lightweight model is essential. While the LSTM model provides the best performance in terms of F1 score and accuracy, it also requires more computational resources. CNN and Transformer models might offer a more lightweight solution with slightly lower performance, making them suitable for less powerful hardware setups.
+
+- **Performance**:  
+  If your system can handle higher computational demands, LSTM is the best choice based on experimental results, particularly for visual data using all input features (2D and 3D). The LSTM model excels at handling temporal dependencies in sequential data, which makes it ideal for HAR tasks that involve pose estimation over time.
+
+- **Input Data**:  
+  This module only works with **visual data**, either in **2D**, **3D**, or both (referred to as "all"). If your setup involves both types of visual data, the "all" input configuration will yield the most comprehensive results. However, if your setup is constrained to 2D or 3D, you can choose those specific configurations.
+
+### Summary of Recommendations:
+
+- **LSTM**:  
+  - **Best for**: Systems with ample computational resources.
+  - **Performance**: Highest F1 score and accuracy.
+  - **Input Options**: Works with 2D, 3D, or all (both 2D and 3D).
+  - **Ideal use case**: When accuracy is the top priority and hardware resources are sufficient.
+
+- **CNN or Transformer**:  
+  - **Best for**: Systems with limited computational resources.
+  - **Performance**: Slightly lower performance compared to LSTM but more efficient.
+  - **Input Options**: Suitable for 2D or 3D data.
+  - **Ideal use case**: When computational efficiency is prioritized over slight performance loss.
+
+In summary, for the best accuracy, use **LSTM** with **all** input data if your hardware supports it. For more resource-constrained environments, consider **CNN** or **Transformer** models with 2D or 3D input data.
